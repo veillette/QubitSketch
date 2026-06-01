@@ -42,4 +42,45 @@ export class StringManager {
       circuitStringProperty: stringProperties.screens.circuitStringProperty,
     };
   }
+
+  /** Titles for the four simulation displays. */
+  public getDisplayTitles(): {
+    readonly probabilitiesStringProperty: ReadOnlyProperty<string>;
+    readonly amplitudesStringProperty: ReadOnlyProperty<string>;
+    readonly blochStringProperty: ReadOnlyProperty<string>;
+    readonly measurementStringProperty: ReadOnlyProperty<string>;
+  } {
+    return {
+      probabilitiesStringProperty: stringProperties.displays.probabilitiesStringProperty,
+      amplitudesStringProperty: stringProperties.displays.amplitudesStringProperty,
+      blochStringProperty: stringProperties.displays.blochStringProperty,
+      measurementStringProperty: stringProperties.displays.measurementStringProperty,
+    };
+  }
+
+  /** Column headers for the amplitude table. */
+  public getTableHeaders(): {
+    readonly stateStringProperty: ReadOnlyProperty<string>;
+    readonly amplitudeStringProperty: ReadOnlyProperty<string>;
+    readonly magnitudeStringProperty: ReadOnlyProperty<string>;
+    readonly phaseStringProperty: ReadOnlyProperty<string>;
+  } {
+    return {
+      stateStringProperty: stringProperties.table.stateStringProperty,
+      amplitudeStringProperty: stringProperties.table.amplitudeStringProperty,
+      magnitudeStringProperty: stringProperties.table.magnitudeStringProperty,
+      phaseStringProperty: stringProperties.table.phaseStringProperty,
+    };
+  }
+
+  /** Labels for the measurement buttons. */
+  public getButtonLabels(): {
+    readonly measureStringProperty: ReadOnlyProperty<string>;
+    readonly clearShotsStringProperty: ReadOnlyProperty<string>;
+  } {
+    return {
+      measureStringProperty: stringProperties.buttons.measureStringProperty,
+      clearShotsStringProperty: stringProperties.buttons.clearShotsStringProperty,
+    };
+  }
 }

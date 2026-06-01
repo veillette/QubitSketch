@@ -89,6 +89,33 @@ const QubitSketchColors = {
     default: "#546e7a",
     projector: "#455a64",
   }),
+
+  // Control dot (•) and the vertical connector line linking it to its target
+  controlDotColorProperty: new ProfileColorProperty(QubitSketchNamespace, "controlDot", {
+    default: "#e8eaf6",
+    projector: "#1a1a1a",
+  }),
+
+  // Simulation displays
+  probabilityBarColorProperty: new ProfileColorProperty(QubitSketchNamespace, "probabilityBar", {
+    default: "#4fc3f7",
+    projector: "#1565c0",
+  }),
+
+  histogramBarColorProperty: new ProfileColorProperty(QubitSketchNamespace, "histogramBar", {
+    default: "#66bb6a",
+    projector: "#2e7d32",
+  }),
+
+  blochArrowColorProperty: new ProfileColorProperty(QubitSketchNamespace, "blochArrow", {
+    default: "#ffca28",
+    projector: "#f57f17",
+  }),
+
+  blochSphereOutlineColorProperty: new ProfileColorProperty(QubitSketchNamespace, "blochSphereOutline", {
+    default: "#1e88e5",
+    projector: "#9e9e9e",
+  }),
 };
 
 export default QubitSketchColors;

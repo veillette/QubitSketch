@@ -7,7 +7,7 @@
  *
  * The active tool is shown with a highlight border.
  */
-import { Node, Rectangle, Text } from "scenerystack/scenery";
+import { Circle, Node, Rectangle, Text } from "scenerystack/scenery";
 import QubitSketchColors from "../../QubitSketchColors.js";
 import type { SelectedTool } from "../model/GateType.js";
 import { GateType } from "../model/GateType.js";
@@ -19,7 +19,16 @@ const BUTTON_GAP = 8;
 const PANEL_PADDING = 10;
 const HIGHLIGHT_INSET = 3;
 
-const ALL_TOOLS: SelectedTool[] = [GateType.H, GateType.X, GateType.Y, GateType.Z, GateType.S, GateType.T, "eraser"];
+const ALL_TOOLS: SelectedTool[] = [
+  GateType.H,
+  GateType.X,
+  GateType.Y,
+  GateType.Z,
+  GateType.S,
+  GateType.T,
+  "control",
+  "eraser",
+];
 
 type ButtonEntry = { tool: SelectedTool; highlight: Rectangle };
 
@@ -77,6 +86,22 @@ export class GatePalettePanel extends Node {
         });
         this.addChild(eraserBox);
         this.addChild(eraserLabel);
+      } else if (tool === "control") {
+        const controlBox = new Rectangle(btnX, btnY, BUTTON_SIZE, BUTTON_SIZE, {
+          fill: QubitSketchColors.slotBackgroundColorProperty,
+          stroke: QubitSketchColors.slotBorderColorProperty,
+          lineWidth: 1,
+          cornerRadius: 6,
+          pickable: false,
+        });
+        const controlDot = new Circle(8, {
+          fill: QubitSketchColors.controlDotColorProperty,
+          centerX: btnX + BUTTON_SIZE / 2,
+          centerY: btnY + BUTTON_SIZE / 2,
+          pickable: false,
+        });
+        this.addChild(controlBox);
+        this.addChild(controlDot);
       } else {
         const gateNode = new GateNode(tool, BUTTON_SIZE);
         gateNode.x = btnX;

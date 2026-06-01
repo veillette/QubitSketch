@@ -2,5 +2,24 @@
   "title": "QubitSketch",
   "screens": {
     "circuit": "Circuit"
+  },
+  "displays": {
+    "probabilities": "Probabilités",
+    "amplitudes": "Amplitudes",
+    "bloch": "Sphères de Bloch",
+    "measurement": "Mesure"
+  },
+  "table": {
+    "state": "État",
+    "amplitude": "Amplitude",
+    "magnitude": "Module",
+    "phase": "Phase"
+  },
+  "buttons": {
+    "measure": "Mesurer",
+    "clearShots": "Effacer"
+  },
+  "tools": {
+    "control": "Contrôle"
   }
 }

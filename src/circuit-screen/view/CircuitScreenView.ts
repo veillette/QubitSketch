@@ -18,6 +18,7 @@ import type { QubitSketchModel } from "../model/QubitSketchModel.js";
 import { MAX_QUBITS, MIN_QUBITS } from "../model/GateType.js";
 import { CircuitCanvas, CIRCUIT_CANVAS_HEIGHT, CIRCUIT_CANVAS_WIDTH } from "./CircuitCanvas.js";
 import { GatePalettePanel } from "./GatePalettePanel.js";
+import { SimulationPanel } from "./SimulationPanel.js";
 
 const MARGIN = 20;
 
@@ -37,15 +38,22 @@ export class CircuitScreenView extends ScreenView {
     palette.centerY = this.layoutBounds.centerY;
     this.addChild(palette);
 
+    // ── Simulation panel (right side) ─────────────────────────────────────────
+    const simulationPanel = new SimulationPanel(model);
+    simulationPanel.right = this.layoutBounds.maxX - MARGIN;
+    simulationPanel.top = MARGIN;
+    this.addChild(simulationPanel);
+
     // ── Qubit count control (above circuit) ───────────────────────────────────
     const qubitControlNode = this.buildQubitCountControl(model);
 
     // ── Circuit canvas ────────────────────────────────────────────────────────
     const circuitCanvas = new CircuitCanvas(model);
 
-    // Position circuit canvas: centered horizontally in the space right of the palette
+    // Position circuit canvas: centered horizontally between the palette and the panel
     const availableLeft = palette.right + MARGIN;
-    const circuitX = availableLeft + (this.layoutBounds.width - availableLeft - MARGIN - CIRCUIT_CANVAS_WIDTH) / 2;
+    const availableRight = simulationPanel.left - MARGIN;
+    const circuitX = availableLeft + (availableRight - availableLeft - CIRCUIT_CANVAS_WIDTH) / 2;
     circuitCanvas.x = circuitX;
     circuitCanvas.y = this.layoutBounds.centerY - CIRCUIT_CANVAS_HEIGHT / 2 + 20;
 
