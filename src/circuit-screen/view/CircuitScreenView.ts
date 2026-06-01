@@ -14,9 +14,9 @@ import { ResetAllButton } from "scenerystack/scenery-phet";
 import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
 import QubitSketchColors from "../../QubitSketchColors.js";
-import type { QubitSketchModel } from "../model/QubitSketchModel.js";
 import { MAX_QUBITS, MIN_QUBITS } from "../model/GateType.js";
-import { CircuitCanvas, CIRCUIT_CANVAS_HEIGHT, CIRCUIT_CANVAS_WIDTH } from "./CircuitCanvas.js";
+import type { QubitSketchModel } from "../model/QubitSketchModel.js";
+import { CIRCUIT_CANVAS_HEIGHT, CIRCUIT_CANVAS_WIDTH, CircuitCanvas } from "./CircuitCanvas.js";
 import { GatePalettePanel } from "./GatePalettePanel.js";
 import { SimulationPanel } from "./SimulationPanel.js";
 
@@ -32,8 +32,15 @@ export class CircuitScreenView extends ScreenView {
     });
     this.addChild(background);
 
+    // ── Circuit canvas ────────────────────────────────────────────────────────
+    // Created first so the palette can use it as a drag-and-drop drop target.
+    const circuitCanvas = new CircuitCanvas(model);
+
+    // Layer that floating drag previews are added to (kept on top of everything).
+    const dragLayer = new Node({ pickable: false });
+
     // ── Gate palette (left side) ──────────────────────────────────────────────
-    const palette = new GatePalettePanel(model);
+    const palette = new GatePalettePanel(model, { dragLayer, dropTarget: circuitCanvas });
     palette.left = MARGIN;
     palette.centerY = this.layoutBounds.centerY;
     this.addChild(palette);
@@ -46,9 +53,6 @@ export class CircuitScreenView extends ScreenView {
 
     // ── Qubit count control (above circuit) ───────────────────────────────────
     const qubitControlNode = this.buildQubitCountControl(model);
-
-    // ── Circuit canvas ────────────────────────────────────────────────────────
-    const circuitCanvas = new CircuitCanvas(model);
 
     // Position circuit canvas: centered horizontally between the palette and the panel
     const availableLeft = palette.right + MARGIN;
@@ -73,6 +77,9 @@ export class CircuitScreenView extends ScreenView {
       bottom: this.layoutBounds.maxY - MARGIN,
     });
     this.addChild(resetAllButton);
+
+    // Drag previews float above all other content.
+    this.addChild(dragLayer);
   }
 
   /**
@@ -167,7 +174,11 @@ export class CircuitScreenView extends ScreenView {
     return container;
   }
 
-  public reset(): void {}
+  public reset(): void {
+    // All view state is driven by model Property links, so model.reset() suffices.
+  }
 
-  public override step(_dt: number): void {}
+  public override step(_dt: number): void {
+    // No per-frame animation.
+  }
 }

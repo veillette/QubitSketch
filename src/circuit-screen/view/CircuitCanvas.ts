@@ -16,7 +16,7 @@
  *   - SLOT_GAP     — gap between consecutive cells
  *   - WIRE_EXTEND  — how far the wire extends past the last slot
  */
-import { Vector2 } from "scenerystack/dot";
+import type { Vector2 } from "scenerystack/dot";
 import { Circle, Line, Node, Rectangle, Text } from "scenerystack/scenery";
 import QubitSketchColors from "../../QubitSketchColors.js";
 import type { CircuitCell } from "../model/GateType.js";
@@ -34,6 +34,11 @@ const CONTROL_DOT_RADIUS = 7;
 // Total canvas dimensions (sized for MAX_QUBITS rows, NUM_STEPS columns)
 export const CIRCUIT_CANVAS_WIDTH = LABEL_WIDTH + NUM_STEPS * SLOT_SIZE + (NUM_STEPS - 1) * SLOT_GAP + WIRE_EXTEND;
 export const CIRCUIT_CANVAS_HEIGHT = MAX_QUBITS * QUBIT_ROW_HEIGHT - SLOT_GAP;
+
+/** The grid as a drag-and-drop drop target (implemented by CircuitCanvas). */
+export interface SlotDropTarget {
+  slotIndexAt(globalPoint: Vector2, qubitCount: number): { qubit: number; step: number } | null;
+}
 
 const slotX = (step: number): number => LABEL_WIDTH + step * (SLOT_SIZE + SLOT_GAP);
 const rowY = (qubit: number): number => qubit * QUBIT_ROW_HEIGHT;

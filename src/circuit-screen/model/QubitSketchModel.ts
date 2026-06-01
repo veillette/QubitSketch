@@ -44,25 +44,21 @@ export class QubitSketchModel implements TModel {
   public constructor() {
     this.circuitProperty = new Property<ReadonlyArray<ReadonlyArray<CircuitCell>>>(QubitSketchModel.emptyCircuit());
 
-    this.stateVectorProperty = new DerivedProperty(
-      [this.circuitProperty, this.qubitCountProperty],
-      (circuit, n) => simulate(circuit, n),
+    this.stateVectorProperty = new DerivedProperty([this.circuitProperty, this.qubitCountProperty], (circuit, n) =>
+      simulate(circuit, n),
     );
 
     this.probabilitiesProperty = new DerivedProperty([this.stateVectorProperty], (state) =>
       state.map((amp) => amp.magnitudeSquared),
     );
 
-    this.blochVectorsProperty = new DerivedProperty(
-      [this.stateVectorProperty, this.qubitCountProperty],
-      (state, n) => computeBlochVectors(state, n),
+    this.blochVectorsProperty = new DerivedProperty([this.stateVectorProperty, this.qubitCountProperty], (state, n) =>
+      computeBlochVectors(state, n),
     );
   }
 
   private static emptyCircuit(): ReadonlyArray<ReadonlyArray<CircuitCell>> {
-    return Array.from({ length: MAX_QUBITS }, () =>
-      Array.from({ length: NUM_STEPS }, (): CircuitCell => EMPTY_CELL),
-    );
+    return Array.from({ length: MAX_QUBITS }, () => Array.from({ length: NUM_STEPS }, (): CircuitCell => EMPTY_CELL));
   }
 
   /** True if any cell in the given step (column) is a control dot. */
@@ -128,5 +124,7 @@ export class QubitSketchModel implements TModel {
     this.circuitProperty.set(QubitSketchModel.emptyCircuit());
   }
 
-  public step(_dt: number): void {}
+  public step(_dt: number): void {
+    // The circuit is static — there is no time-dependent state to advance.
+  }
 }

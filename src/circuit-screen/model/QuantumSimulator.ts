@@ -64,7 +64,12 @@ export function applyControlledGate(
  * Limitation: with controls present, only the first gate-bearing wire is used as
  * the target — one controlled operation per column.
  */
-function applyColumn(state: Complex[], n: number, circuit: ReadonlyArray<ReadonlyArray<CircuitCell>>, step: number): void {
+function applyColumn(
+  state: Complex[],
+  n: number,
+  circuit: ReadonlyArray<ReadonlyArray<CircuitCell>>,
+  step: number,
+): void {
   const controls: number[] = [];
   const gateWires: Array<{ wire: number; matrix: Complex2x2 }> = [];
 

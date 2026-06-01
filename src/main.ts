@@ -16,8 +16,8 @@ import "./brand.js";
 
 import { onReadyToLaunch, PreferencesModel, Sim } from "scenerystack/sim";
 import { Tandem } from "scenerystack/tandem";
-import { StringManager } from "./i18n/StringManager.js";
 import { CircuitScreen } from "./circuit-screen/CircuitScreen.js";
+import { StringManager } from "./i18n/StringManager.js";
 
 onReadyToLaunch(() => {
   const stringManager = StringManager.getInstance();

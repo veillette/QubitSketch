@@ -2,8 +2,11 @@
 
 ## Project: QubitSketch
 
-A drag-and-drop quantum circuit builder built with [SceneryStack](https://scenerystack.org/).
-Users select quantum gates from a palette and place them on qubit wires to compose circuits.
+A drag-and-drop quantum circuit builder **with a live CPU statevector simulator**, built with
+[SceneryStack](https://scenerystack.org/). Users place quantum gates on qubit wires and the
+quantum state is simulated and displayed in real time (probabilities, amplitudes, Bloch
+spheres, sampled measurements). Pedagogical reimplementation of [Quirk](https://github.com/Strilanc/Quirk)'s
+core. See `README.md` for the full feature list and the **Limitations (vs Quirk)** scope.
 
 ## Tech Stack
 
@@ -32,12 +35,17 @@ brand.ts → splash.ts → assert.ts → init.ts
 | `src/QubitSketchNamespace.ts` | Namespace "qubit-sketch" for scoping color names |
 | `src/i18n/StringManager.ts` | Typed localized string access (singleton) |
 | `src/circuit-screen/CircuitScreen.ts` | Screen wrapper |
-| `src/circuit-screen/model/GateType.ts` | Gate type const-enum, CircuitCell, SelectedTool types |
-| `src/circuit-screen/model/QubitSketchModel.ts` | Circuit state, toggle/set/clear operations |
-| `src/circuit-screen/view/CircuitScreenView.ts` | Top-level view, layout orchestration |
-| `src/circuit-screen/view/CircuitCanvas.ts` | Qubit wires + gate slot grid + click-to-place |
-| `src/circuit-screen/view/GatePalettePanel.ts` | Gate selection palette with active highlight |
+| `src/circuit-screen/model/GateType.ts` | `GateType` const-enum + **discriminated-union `CircuitCell`** (empty/gate/control/controlledTarget), `SelectedTool`, endianness note |
+| `src/circuit-screen/model/GateMatrices.ts` | 2×2 complex unitaries per gate (`scenerystack/dot` `Complex`) |
+| `src/circuit-screen/model/QuantumSimulator.ts` | Pure statevector engine: `applyControlledGate`, `applyColumn`, `simulate`, `computeBlochVectors` |
+| `src/circuit-screen/model/QubitSketchModel.ts` | Circuit state + `placeCell`/`removeCell` + `DerivedProperty` chain (`stateVectorProperty` → `probabilitiesProperty`/`blochVectorsProperty`) |
+| `src/circuit-screen/view/CircuitScreenView.ts` | Top-level view, 3-column layout, drag layer |
+| `src/circuit-screen/view/CircuitCanvas.ts` | Qubit wires, control dots + connectors, click-to-place, `slotIndexAt` (drop hit-test) |
+| `src/circuit-screen/view/GatePalettePanel.ts` | Gate/control/eraser palette; **drag-to-place** via `DragListener` |
 | `src/circuit-screen/view/GateNode.ts` | Colored rectangle + label for a single gate |
+| `src/circuit-screen/view/SimulationPanel.ts` | Right-side `sun.Panel` hosting the four state displays |
+| `src/circuit-screen/view/{ProbabilityBarsNode,AmplitudeTableNode,BlochSpheresNode,MeasurementHistogramNode}.ts` | The four live displays |
+| `src/circuit-screen/view/displayUtils.ts` | Ket label + complex/phase formatting helpers |
 
 ## Supported Gates
 
@@ -49,28 +57,41 @@ brand.ts → splash.ts → assert.ts → init.ts
 | Pauli-Z | Z | Phase flip: \|1⟩→-\|1⟩ |
 | Phase | S | Adds π/2 phase to \|1⟩ |
 | T gate | T | Adds π/4 phase to \|1⟩ |
+| Control | • | Makes the gate in the same column controlled (CNOT = control + X; CCX = two controls + X) |
 
 ## Interaction Model
 
-- **Select gate**: click a gate button in the left palette → highlights active tool
-- **Place gate**: click any circuit slot → places the selected gate
+- **Drag-to-place**: drag a gate/control from the palette onto any slot (`DragListener`)
+- **Click-to-place** (fallback): select a tool, then click a slot
 - **Toggle**: clicking a slot occupied by the *same* gate removes it
 - **Eraser**: select the ✕ tool, then click any slot to clear it
+- **Controls**: a control dot (•) in a column makes that column's gate controlled
 - **Qubit count**: use +/− buttons above the circuit (1–5 qubits)
+- **Measure**: samples one outcome from the final state into a histogram (does not collapse)
 - **Reset All**: clears the circuit and resets all controls to defaults
+
+## Endianness
+
+Qubit 0 is the **least-significant bit**: basis index `i` has qubit `q` set iff `(i>>q)&1`,
+so model row `circuit[q]` maps to bit `q`. Kets display big-endian: `|q_{n-1}…q_0⟩`.
+Keep simulator and displays consistent with this.
 
 ## Extending
 
 ### Adding a new gate type
 1. Add the key to `GateType` in `src/circuit-screen/model/GateType.ts`
-2. Add a `ProfileColorProperty` entry to `src/QubitSketchColors.ts`
-3. Add the color mapping to `GATE_COLOR_MAP` in `src/circuit-screen/view/GateNode.ts`
-4. Add the gate to `ALL_TOOLS` in `src/circuit-screen/view/GatePalettePanel.ts`
+2. Add its 2×2 matrix to `GATE_MATRICES` in `src/circuit-screen/model/GateMatrices.ts`
+3. Add a `ProfileColorProperty` entry to `src/QubitSketchColors.ts`
+4. Add the color mapping to `GATE_COLOR_MAP` in `src/circuit-screen/view/GateNode.ts`
+5. Add the gate to `ALL_TOOLS` in `src/circuit-screen/view/GatePalettePanel.ts`
+   (it becomes controllable automatically when a control dot shares its column)
 
-### Adding CNOT / two-qubit gates
-The current model uses a 1-D `CircuitCell` (single gate per slot). Two-qubit gates
-require storing a control qubit reference. Extend `CircuitCell` to a discriminated
-union type before adding CNOT/SWAP/CZ support.
+### Scope / Non-Goals (vs Quirk)
+This is a **teaching** tool. Deliberately not implemented (see `README.md` for the full list):
+WebGL/GPU sim (CPU only, **≤5 qubits**); arithmetic/modular/QFT/Grover gates; parametrized or
+time-animated gates; density-matrix display; true 3D Bloch sphere (2D projection only);
+custom-gate forge; anti-controls; SWAP/iSWAP; mid-circuit collapsing measurement. **One target
+gate per column when controls are present** (multiple control dots → Toffoli/CCX is supported).
 
 ## Common Commands
 

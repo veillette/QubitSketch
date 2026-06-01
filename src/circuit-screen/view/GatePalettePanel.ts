@@ -7,12 +7,19 @@
  *
  * The active tool is shown with a highlight border.
  */
-import { Circle, Node, Rectangle, Text } from "scenerystack/scenery";
+import { Circle, DragListener, Node, Rectangle, Text } from "scenerystack/scenery";
 import QubitSketchColors from "../../QubitSketchColors.js";
 import type { SelectedTool } from "../model/GateType.js";
 import { GateType } from "../model/GateType.js";
 import type { QubitSketchModel } from "../model/QubitSketchModel.js";
+import type { SlotDropTarget } from "./CircuitCanvas.js";
 import { GateNode } from "./GateNode.js";
+
+/** Where dragged gates float and land. Supplied by CircuitScreenView. */
+export interface PaletteDragContext {
+  readonly dragLayer: Node;
+  readonly dropTarget: SlotDropTarget;
+}
 
 const BUTTON_SIZE = 52;
 const BUTTON_GAP = 8;
@@ -33,7 +40,7 @@ const ALL_TOOLS: SelectedTool[] = [
 type ButtonEntry = { tool: SelectedTool; highlight: Rectangle };
 
 export class GatePalettePanel extends Node {
-  public constructor(model: QubitSketchModel) {
+  public constructor(model: QubitSketchModel, dragContext?: PaletteDragContext) {
     super();
 
     const panelHeight = ALL_TOOLS.length * (BUTTON_SIZE + BUTTON_GAP) - BUTTON_GAP + PANEL_PADDING * 2;
@@ -71,55 +78,57 @@ export class GatePalettePanel extends Node {
       );
       this.addChild(highlight);
 
-      if (tool === "eraser") {
-        const eraserBox = new Rectangle(btnX, btnY, BUTTON_SIZE, BUTTON_SIZE, {
-          fill: QubitSketchColors.eraserColorProperty,
-          cornerRadius: 6,
-          pickable: false,
-        });
-        const eraserLabel = new Text("✕", {
-          font: `bold ${Math.floor(BUTTON_SIZE * 0.44)}px sans-serif`,
-          fill: "white",
-          centerX: btnX + BUTTON_SIZE / 2,
-          centerY: btnY + BUTTON_SIZE / 2,
-          pickable: false,
-        });
-        this.addChild(eraserBox);
-        this.addChild(eraserLabel);
-      } else if (tool === "control") {
-        const controlBox = new Rectangle(btnX, btnY, BUTTON_SIZE, BUTTON_SIZE, {
-          fill: QubitSketchColors.slotBackgroundColorProperty,
-          stroke: QubitSketchColors.slotBorderColorProperty,
-          lineWidth: 1,
-          cornerRadius: 6,
-          pickable: false,
-        });
-        const controlDot = new Circle(8, {
-          fill: QubitSketchColors.controlDotColorProperty,
-          centerX: btnX + BUTTON_SIZE / 2,
-          centerY: btnY + BUTTON_SIZE / 2,
-          pickable: false,
-        });
-        this.addChild(controlBox);
-        this.addChild(controlDot);
-      } else {
-        const gateNode = new GateNode(tool, BUTTON_SIZE);
-        gateNode.x = btnX;
-        gateNode.y = btnY;
-        gateNode.pickable = false;
-        this.addChild(gateNode);
-      }
+      const buttonNode = makeToolNode(tool, BUTTON_SIZE);
+      buttonNode.x = btnX;
+      buttonNode.y = btnY;
+      buttonNode.pickable = false;
+      this.addChild(buttonNode);
 
       // Transparent hit-area on top so clicks always register
       const hitArea = new Rectangle(btnX, btnY, BUTTON_SIZE, BUTTON_SIZE, {
         fill: "rgba(0,0,0,0)",
         cursor: "pointer",
       });
-      hitArea.addInputListener({
-        down: () => {
-          model.selectedToolProperty.value = tool;
-        },
-      });
+
+      if (dragContext === undefined) {
+        // Click-to-select only.
+        hitArea.addInputListener({
+          down: () => {
+            model.selectedToolProperty.value = tool;
+          },
+        });
+      } else {
+        // Drag a copy onto the grid; a plain click (no drop on a slot) just selects.
+        let preview: Node | null = null;
+        const { dragLayer, dropTarget } = dragContext;
+        hitArea.addInputListener(
+          new DragListener({
+            start: (event) => {
+              model.selectedToolProperty.value = tool;
+              preview = makeToolNode(tool, BUTTON_SIZE);
+              preview.opacity = 0.85;
+              dragLayer.addChild(preview);
+              preview.center = dragLayer.globalToLocalPoint(event.pointer.point);
+            },
+            drag: (event) => {
+              if (preview !== null) {
+                preview.center = dragLayer.globalToLocalPoint(event.pointer.point);
+              }
+            },
+            end: (event) => {
+              const slot =
+                event === null ? null : dropTarget.slotIndexAt(event.pointer.point, model.qubitCountProperty.value);
+              if (slot !== null) {
+                model.placeCell(slot.qubit, slot.step);
+              }
+              if (preview !== null) {
+                dragLayer.removeChild(preview);
+                preview = null;
+              }
+            },
+          }),
+        );
+      }
       this.addChild(hitArea);
 
       buttonEntries.push({ tool, highlight });
@@ -132,4 +141,35 @@ export class GatePalettePanel extends Node {
       }
     });
   }
+}
+
+/** Builds the visual for a tool at the given size, drawn from local (0,0). */
+function makeToolNode(tool: SelectedTool, size: number): Node {
+  const node = new Node();
+  if (tool === "eraser") {
+    node.addChild(new Rectangle(0, 0, size, size, { fill: QubitSketchColors.eraserColorProperty, cornerRadius: 6 }));
+    node.addChild(
+      new Text("✕", {
+        font: `bold ${Math.floor(size * 0.44)}px sans-serif`,
+        fill: "white",
+        centerX: size / 2,
+        centerY: size / 2,
+      }),
+    );
+  } else if (tool === "control") {
+    node.addChild(
+      new Rectangle(0, 0, size, size, {
+        fill: QubitSketchColors.slotBackgroundColorProperty,
+        stroke: QubitSketchColors.slotBorderColorProperty,
+        lineWidth: 1,
+        cornerRadius: 6,
+      }),
+    );
+    node.addChild(
+      new Circle(8, { fill: QubitSketchColors.controlDotColorProperty, centerX: size / 2, centerY: size / 2 }),
+    );
+  } else {
+    node.addChild(new GateNode(tool, size));
+  }
+  return node;
 }
