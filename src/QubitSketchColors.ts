@@ -28,6 +28,31 @@ const QubitSketchColors = {
     projector: "#1a1a1a",
   }),
 
+  // Toolbar / control buttons (undo, redo, step-through transport, QASM, qubit ±).
+  // Deliberately distinct from panelBackground: a panel-colored button is nearly the same
+  // hue as the dark background and visually disappears, so the enabled fill is a vivid blue
+  // that reads clearly against either theme.
+  buttonColorProperty: new ProfileColorProperty(QubitSketchNamespace, "button", {
+    default: "#1565c0",
+    projector: "#e3f2fd",
+  }),
+
+  // Subtle edge for the always-enabled qubit ± boxes (the sun push buttons derive their own
+  // stroke from the base color, so they intentionally don't use this).
+  buttonStrokeColorProperty: new ProfileColorProperty(QubitSketchNamespace, "buttonStroke", {
+    default: "#0e3a6b",
+    projector: "#1565c0",
+  }),
+
+  // Disabled push-button fill. The sun button code defaults this to a near-white light gray
+  // and then brightens it, so in the dark theme a disabled button glares like a white chip.
+  // A dark slate keeps disabled buttons muted and recessive instead. (Projector keeps the
+  // light-gray behavior, which already reads correctly on a light background.)
+  buttonDisabledColorProperty: new ProfileColorProperty(QubitSketchNamespace, "buttonDisabled", {
+    default: "#233446",
+    projector: "#dcdcdc",
+  }),
+
   // Qubit wire and slot colors
   wireColorProperty: new ProfileColorProperty(QubitSketchNamespace, "wire", {
     default: "#1e88e5",

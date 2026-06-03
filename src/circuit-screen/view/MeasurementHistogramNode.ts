@@ -12,7 +12,7 @@
  */
 import { Property, type ReadOnlyProperty } from "scenerystack/axon";
 import { Node, Rectangle, Text } from "scenerystack/scenery";
-import { RectangularPushButton } from "scenerystack/sun";
+import { FlatAppearanceStrategy, RectangularPushButton } from "scenerystack/sun";
 import { StringManager } from "../../i18n/StringManager.js";
 import QubitSketchColors from "../../QubitSketchColors.js";
 import { ketLabel } from "./displayUtils.js";
@@ -54,6 +54,7 @@ export class MeasurementHistogramNode extends Node {
     const measureButton = new RectangularPushButton({
       content: new Text(labels.measureStringProperty, { font: "13px sans-serif", fill: "white" }),
       baseColor: QubitSketchColors.histogramBarColorProperty,
+      buttonAppearanceStrategy: FlatAppearanceStrategy,
       listener: () => {
         const idx = sampleOutcome(probabilitiesProperty.value);
         const next = shotsProperty.value.slice();
@@ -65,6 +66,7 @@ export class MeasurementHistogramNode extends Node {
     const clearButton = new RectangularPushButton({
       content: new Text(labels.clearShotsStringProperty, { font: "13px sans-serif", fill: "white" }),
       baseColor: QubitSketchColors.eraserColorProperty,
+      buttonAppearanceStrategy: FlatAppearanceStrategy,
       left: measureButton.right + 8,
       listener: () => {
         shotsProperty.value = new Array(shotsProperty.value.length).fill(0);

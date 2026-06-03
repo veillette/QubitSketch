@@ -13,7 +13,7 @@ import { Node, Rectangle, Text } from "scenerystack/scenery";
 import { ResetAllButton } from "scenerystack/scenery-phet";
 import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
-import { RectangularPushButton } from "scenerystack/sun";
+import { FlatAppearanceStrategy, RectangularPushButton } from "scenerystack/sun";
 import { StringManager } from "../../i18n/StringManager.js";
 import QubitSketchColors from "../../QubitSketchColors.js";
 import type { QubitSketchModel } from "../model/QubitSketchModel.js";
@@ -78,17 +78,25 @@ export class CircuitScreenView extends ScreenView {
     this.addChild(circuitCanvas);
 
     // ── Undo / redo (next to the qubit-count control) ─────────────────────────
+    // Shared styling: a flat (un-gradiented) look, a vivid enabled fill that stands out from
+    // the background, and a dark disabled fill so a disabled button stays muted instead of
+    // glaring white.
+    const buttonAppearance = {
+      baseColor: QubitSketchColors.buttonColorProperty,
+      disabledColor: QubitSketchColors.buttonDisabledColorProperty,
+      buttonAppearanceStrategy: FlatAppearanceStrategy,
+    } as const;
     const undoButton = new RectangularPushButton({
+      ...buttonAppearance,
       content: new Text("↶", { font: "bold 18px sans-serif", fill: QubitSketchColors.textColorProperty }),
       listener: () => model.undo(),
       enabledProperty: model.canUndoProperty,
-      baseColor: QubitSketchColors.panelBackgroundColorProperty,
     });
     const redoButton = new RectangularPushButton({
+      ...buttonAppearance,
       content: new Text("↷", { font: "bold 18px sans-serif", fill: QubitSketchColors.textColorProperty }),
       listener: () => model.redo(),
       enabledProperty: model.canRedoProperty,
-      baseColor: QubitSketchColors.panelBackgroundColorProperty,
     });
     undoButton.left = qubitControlNode.right + 24;
     undoButton.centerY = qubitControlNode.centerY;
@@ -139,12 +147,12 @@ export class CircuitScreenView extends ScreenView {
     // ── OpenQASM export/import (bottom-right, left of Reset All) ───────────────
     const openQasmDialog = createQasmDialogOpener(model);
     const qasmButton = new RectangularPushButton({
+      ...buttonAppearance,
       content: new Text(StringManager.getInstance().getQasmStrings().buttonStringProperty, {
         font: "bold 14px sans-serif",
         fill: QubitSketchColors.textColorProperty,
       }),
       listener: openQasmDialog,
-      baseColor: QubitSketchColors.panelBackgroundColorProperty,
     });
     qasmButton.right = resetAllButton.left - 16;
     qasmButton.centerY = resetAllButton.centerY;
@@ -169,8 +177,8 @@ export class CircuitScreenView extends ScreenView {
 
     // "−" button
     const minusBox = new Rectangle(0, 0, BUTTON_SIZE, BUTTON_SIZE, {
-      fill: QubitSketchColors.panelBackgroundColorProperty,
-      stroke: QubitSketchColors.panelBorderColorProperty,
+      fill: QubitSketchColors.buttonColorProperty,
+      stroke: QubitSketchColors.buttonStrokeColorProperty,
       lineWidth: 1,
       cornerRadius: BUTTON_RADIUS,
       cursor: "pointer",
@@ -211,8 +219,8 @@ export class CircuitScreenView extends ScreenView {
     // "+" button
     const plusX = readoutX + READOUT_WIDTH + SPACING;
     const plusBox = new Rectangle(plusX, 0, BUTTON_SIZE, BUTTON_SIZE, {
-      fill: QubitSketchColors.panelBackgroundColorProperty,
-      stroke: QubitSketchColors.panelBorderColorProperty,
+      fill: QubitSketchColors.buttonColorProperty,
+      stroke: QubitSketchColors.buttonStrokeColorProperty,
       lineWidth: 1,
       cornerRadius: BUTTON_RADIUS,
       cursor: "pointer",

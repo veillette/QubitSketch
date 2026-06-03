@@ -14,7 +14,7 @@
  */
 import { DerivedProperty } from "scenerystack/axon";
 import { HBox, Text } from "scenerystack/scenery";
-import { RectangularPushButton } from "scenerystack/sun";
+import { FlatAppearanceStrategy, RectangularPushButton } from "scenerystack/sun";
 import { StringManager } from "../../i18n/StringManager.js";
 import QubitSketchColors from "../../QubitSketchColors.js";
 import type { QubitSketchModel } from "../model/QubitSketchModel.js";
@@ -27,9 +27,18 @@ export class InspectControlNode extends HBox {
     // The column the readout/playhead currently sits at: the cursor, or the full depth when live.
     const shownColumn = (): number => stepProperty.value ?? depthProperty.value;
 
+    // Shared button styling: a flat (un-gradiented) look, a vivid enabled fill that stands out
+    // from the background, and a dark disabled fill so the (often-disabled) transport buttons
+    // stay muted instead of glaring white the way the sun default light-gray disabled color does.
+    const buttonAppearance = {
+      baseColor: QubitSketchColors.buttonColorProperty,
+      disabledColor: QubitSketchColors.buttonDisabledColorProperty,
+      buttonAppearanceStrategy: FlatAppearanceStrategy,
+    } as const;
+
     const prevButton = new RectangularPushButton({
+      ...buttonAppearance,
       content: new Text("◀", { font: "bold 16px sans-serif", fill: QubitSketchColors.textColorProperty }),
-      baseColor: QubitSketchColors.panelBackgroundColorProperty,
       listener: () => {
         const k = shownColumn();
         if (k > 0) {
@@ -43,8 +52,8 @@ export class InspectControlNode extends HBox {
     });
 
     const nextButton = new RectangularPushButton({
+      ...buttonAppearance,
       content: new Text("▶", { font: "bold 16px sans-serif", fill: QubitSketchColors.textColorProperty }),
-      baseColor: QubitSketchColors.panelBackgroundColorProperty,
       listener: () => {
         const next = shownColumn() + 1;
         // Stepping past the last column returns to the live (final) state.
@@ -65,11 +74,11 @@ export class InspectControlNode extends HBox {
     });
 
     const liveButton = new RectangularPushButton({
+      ...buttonAppearance,
       content: new Text(strings.liveStringProperty, {
         font: "12px sans-serif",
         fill: QubitSketchColors.textColorProperty,
       }),
-      baseColor: QubitSketchColors.panelBackgroundColorProperty,
       listener: () => {
         stepProperty.value = null;
       },
