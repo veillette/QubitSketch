@@ -1,0 +1,85 @@
+/**
+ * InspectControlNode.ts
+ *
+ * Transport control for the step-through "inspect" mode. It scrubs the model's
+ * inspectStepProperty (number of circuit columns applied) so the live displays show
+ * the intermediate state after each column:
+ *
+ *   ◀  step one column back (entering inspect from the live/final state)
+ *   ▶  step one column forward (stepping past the last column returns to live)
+ *   Live  jump back to the final state (inspect off)
+ *
+ * "Live" (inspectStep === null) is treated as sitting at the end of the circuit, so the
+ * readout shows `k / depth` while inspecting and "Live" otherwise.
+ */
+import { DerivedProperty } from "scenerystack/axon";
+import { HBox, Text } from "scenerystack/scenery";
+import { RectangularPushButton } from "scenerystack/sun";
+import { StringManager } from "../../i18n/StringManager.js";
+import QubitSketchColors from "../../QubitSketchColors.js";
+import type { QubitSketchModel } from "../model/QubitSketchModel.js";
+
+export class InspectControlNode extends HBox {
+  public constructor(model: QubitSketchModel) {
+    const { inspectStepProperty: stepProperty, circuitDepthProperty: depthProperty } = model;
+    const strings = StringManager.getInstance().getInspectStrings();
+
+    // The column the readout/playhead currently sits at: the cursor, or the full depth when live.
+    const shownColumn = (): number => stepProperty.value ?? depthProperty.value;
+
+    const prevButton = new RectangularPushButton({
+      content: new Text("◀", { font: "bold 16px sans-serif", fill: QubitSketchColors.textColorProperty }),
+      baseColor: QubitSketchColors.panelBackgroundColorProperty,
+      listener: () => {
+        const k = shownColumn();
+        if (k > 0) {
+          stepProperty.value = k - 1;
+        }
+      },
+      enabledProperty: new DerivedProperty(
+        [stepProperty, depthProperty],
+        (step, depth) => depth > 0 && (step ?? depth) > 0,
+      ),
+    });
+
+    const nextButton = new RectangularPushButton({
+      content: new Text("▶", { font: "bold 16px sans-serif", fill: QubitSketchColors.textColorProperty }),
+      baseColor: QubitSketchColors.panelBackgroundColorProperty,
+      listener: () => {
+        const next = shownColumn() + 1;
+        // Stepping past the last column returns to the live (final) state.
+        stepProperty.value = next >= depthProperty.value ? null : next;
+      },
+      // Forward only makes sense while inspecting (live already sits at the end).
+      enabledProperty: new DerivedProperty([stepProperty], (step) => step !== null),
+    });
+
+    const readout = new Text("", {
+      font: "13px monospace",
+      fill: QubitSketchColors.textColorProperty,
+    });
+    new DerivedProperty([stepProperty, depthProperty, strings.liveStringProperty], (step, depth, live) =>
+      step === null ? live : `${step} / ${depth}`,
+    ).link((text) => {
+      readout.string = text;
+    });
+
+    const liveButton = new RectangularPushButton({
+      content: new Text(strings.liveStringProperty, {
+        font: "12px sans-serif",
+        fill: QubitSketchColors.textColorProperty,
+      }),
+      baseColor: QubitSketchColors.panelBackgroundColorProperty,
+      listener: () => {
+        stepProperty.value = null;
+      },
+      enabledProperty: new DerivedProperty([stepProperty], (step) => step !== null),
+    });
+
+    super({
+      spacing: 6,
+      align: "center",
+      children: [prevButton, readout, nextButton, liveButton],
+    });
+  }
+}

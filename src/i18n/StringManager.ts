@@ -94,6 +94,39 @@ export class StringManager {
     };
   }
 
+  /** Labels for the step-through inspect transport. */
+  public getInspectStrings(): {
+    readonly liveStringProperty: ReadOnlyProperty<string>;
+  } {
+    return {
+      liveStringProperty: stringProperties.inspect.liveStringProperty,
+    };
+  }
+
+  /** Labels for the OpenQASM export/import dialog. */
+  public getQasmStrings(): {
+    readonly buttonStringProperty: ReadOnlyProperty<string>;
+    readonly titleStringProperty: ReadOnlyProperty<string>;
+    readonly exportLabelStringProperty: ReadOnlyProperty<string>;
+    readonly importLabelStringProperty: ReadOnlyProperty<string>;
+    readonly copyStringProperty: ReadOnlyProperty<string>;
+    readonly copiedStringProperty: ReadOnlyProperty<string>;
+    readonly loadStringProperty: ReadOnlyProperty<string>;
+    readonly errorStringProperty: ReadOnlyProperty<string>;
+  } {
+    const q = stringProperties.qasm;
+    return {
+      buttonStringProperty: q.buttonStringProperty,
+      titleStringProperty: q.titleStringProperty,
+      exportLabelStringProperty: q.exportLabelStringProperty,
+      importLabelStringProperty: q.importLabelStringProperty,
+      copyStringProperty: q.copyStringProperty,
+      copiedStringProperty: q.copiedStringProperty,
+      loadStringProperty: q.loadStringProperty,
+      errorStringProperty: q.errorStringProperty,
+    };
+  }
+
   /** One-line descriptions for each palette tool, keyed by {@link SelectedTool}. */
   public getToolDescriptions(): Record<SelectedTool, ReadOnlyProperty<string>> {
     const d = stringProperties.descriptions;

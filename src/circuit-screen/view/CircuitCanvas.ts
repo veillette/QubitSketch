@@ -56,6 +56,10 @@ export class CircuitCanvas extends Node {
   private readonly connectors: Array<Line | null>;
   /** Highlight ring around the rotation cell whose angle is being edited. */
   private readonly selectionRing: Rectangle;
+  /** Vertical "playhead" marking how far the circuit has been simulated in step-through mode. */
+  private readonly inspectPlayhead: Line;
+  /** Current inspect cursor (columns applied), or null when not inspecting. */
+  private inspectStep: number | null = null;
 
   public constructor(model: QubitSketchModel) {
     super();
@@ -71,6 +75,13 @@ export class CircuitCanvas extends Node {
       stroke: QubitSketchColors.selectedToolHighlightColorProperty,
       lineWidth: 2,
       cornerRadius: 6,
+      visible: false,
+      pickable: false,
+    });
+    this.inspectPlayhead = new Line(0, 0, 0, 0, {
+      stroke: QubitSketchColors.inspectPlayheadColorProperty,
+      lineWidth: 2.5,
+      lineDash: [5, 4],
       visible: false,
       pickable: false,
     });
@@ -146,8 +157,9 @@ export class CircuitCanvas extends Node {
 
     // Connector lines draw on top of the wires but below the gate/control nodes' rows.
     this.addChild(this.connectorLayer);
-    // Selection ring floats above the cells.
+    // Selection ring and inspect playhead float above the cells.
     this.addChild(this.selectionRing);
+    this.addChild(this.inspectPlayhead);
 
     // React to circuit changes — update gate/control nodes and connectors
     model.circuitProperty.link((circuit) => {
@@ -166,7 +178,7 @@ export class CircuitCanvas extends Node {
       }
     });
 
-    // React to qubit count changes — show/hide rows and refresh connectors
+    // React to qubit count changes — show/hide rows and refresh connectors + playhead
     model.qubitCountProperty.link((count) => {
       for (let q = 0; q < MAX_QUBITS; q++) {
         const row = this.qubitRows[q];
@@ -175,7 +187,27 @@ export class CircuitCanvas extends Node {
         }
       }
       this.updateConnectors(model.circuitProperty.value, count);
+      this.updateInspectPlayhead(model.qubitCountProperty.value);
     });
+
+    // Position the step-through playhead at the current inspect boundary.
+    model.inspectStepProperty.link((step) => {
+      this.inspectStep = step;
+      this.updateInspectPlayhead(model.qubitCountProperty.value);
+    });
+  }
+
+  /** Positions the inspect playhead in the gap just left of column `inspectStep`, or hides it. */
+  private updateInspectPlayhead(qubitCount: number): void {
+    if (this.inspectStep === null) {
+      this.inspectPlayhead.visible = false;
+      return;
+    }
+    const x = LABEL_WIDTH + this.inspectStep * (SLOT_SIZE + SLOT_GAP) - SLOT_GAP / 2;
+    const top = rowY(0) - 4;
+    const bottom = rowY(qubitCount - 1) + SLOT_SIZE + 4;
+    this.inspectPlayhead.setLine(x, top, x, bottom);
+    this.inspectPlayhead.visible = true;
   }
 
   /** Builds the visual node for a cell, positioned within its slot, or null if empty. */

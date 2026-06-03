@@ -25,6 +25,19 @@
   "inspector": {
     "angle": "Angle"
   },
+  "inspect": {
+    "live": "En direct"
+  },
+  "qasm": {
+    "button": "QASM",
+    "title": "OpenQASM 2.0",
+    "exportLabel": "Exporter (copier vers Qiskit)",
+    "importLabel": "Importer (collez, puis Charger)",
+    "copy": "Copier",
+    "copied": "Copié !",
+    "load": "Charger",
+    "error": "Impossible d’analyser le code OpenQASM"
+  },
   "descriptions": {
     "H": "Hadamard — crée une superposition égale",
     "X": "Pauli-X — inversion de bit (NON quantique)",

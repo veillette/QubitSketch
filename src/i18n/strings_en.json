@@ -25,6 +25,19 @@
   "inspector": {
     "angle": "Angle"
   },
+  "inspect": {
+    "live": "Live"
+  },
+  "qasm": {
+    "button": "QASM",
+    "title": "OpenQASM 2.0",
+    "exportLabel": "Export (copy into Qiskit)",
+    "importLabel": "Import (paste, then Load)",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "load": "Load",
+    "error": "Could not parse OpenQASM"
+  },
   "descriptions": {
     "H": "Hadamard — creates an equal superposition",
     "X": "Pauli-X — bit flip (quantum NOT)",

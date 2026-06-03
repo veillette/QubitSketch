@@ -37,7 +37,7 @@ export class SimulationPanel extends Panel {
       children: [
         section(
           titles.probabilitiesStringProperty,
-          new ProbabilityBarsNode(model.probabilitiesProperty, SIM_PANEL_CONTENT_WIDTH, PROBABILITY_BOX_HEIGHT),
+          new ProbabilityBarsNode(model.stateVectorProperty, SIM_PANEL_CONTENT_WIDTH, PROBABILITY_BOX_HEIGHT),
         ),
         section(
           titles.amplitudesStringProperty,

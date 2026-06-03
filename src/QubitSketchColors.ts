@@ -54,6 +54,12 @@ const QubitSketchColors = {
     projector: "#1565c0",
   }),
 
+  // Step-through "inspect" playhead: a vertical line marking how far the circuit has been simulated.
+  inspectPlayheadColorProperty: new ProfileColorProperty(QubitSketchNamespace, "inspectPlayhead", {
+    default: "#ffca28",
+    projector: "#f57f17",
+  }),
+
   // Gate colors — one per gate type
   hGateColorProperty: new ProfileColorProperty(QubitSketchNamespace, "hGate", {
     default: "#7c4dff",

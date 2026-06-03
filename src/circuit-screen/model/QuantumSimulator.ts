@@ -164,10 +164,18 @@ function applyColumn(
 }
 
 /**
- * Simulates the circuit from |0…0⟩ and returns the final statevector
- * (length 2^n). Only the first `n` qubit rows participate.
+ * Simulates the circuit from |0…0⟩ and returns the statevector (length 2^n) after
+ * applying the first `maxColumns` columns. Only the first `n` qubit rows participate.
+ *
+ * `maxColumns` defaults to the full circuit; passing a smaller value powers the
+ * step-through "inspect" mode (the state after the first k columns). Columns beyond
+ * the circuit's content are empty, so any value ≥ the circuit depth gives the final state.
  */
-export function simulate(circuit: ReadonlyArray<ReadonlyArray<CircuitCell>>, n: number): Complex[] {
+export function simulate(
+  circuit: ReadonlyArray<ReadonlyArray<CircuitCell>>,
+  n: number,
+  maxColumns: number = NUM_STEPS,
+): Complex[] {
   const dim = 1 << n;
   const state: Complex[] = new Array(dim);
   state[0] = Complex.ONE;
@@ -175,7 +183,8 @@ export function simulate(circuit: ReadonlyArray<ReadonlyArray<CircuitCell>>, n: 
     state[i] = Complex.ZERO;
   }
 
-  for (let step = 0; step < NUM_STEPS; step++) {
+  const limit = Math.max(0, Math.min(NUM_STEPS, maxColumns));
+  for (let step = 0; step < limit; step++) {
     applyColumn(state, n, circuit, step);
   }
   return state;

@@ -37,19 +37,21 @@ brand.ts → splash.ts → assert.ts → init.ts
 | `src/circuit-screen/CircuitScreen.ts` | Screen wrapper |
 | `src/circuit-screen/model/GateType.ts` | `GateType` const-enum + **discriminated-union `CircuitCell`** (empty/gate/control/antiControl/controlledTarget/swap/paramGate), `SelectedTool`, `RotationTool`/`RotationAxis`, `isAnyControl`, endianness note |
 | `src/circuit-screen/model/GateMatrices.ts` | 2×2 complex unitaries per gate + `rotationMatrix(axis, θ)` (`scenerystack/dot` `Complex`) |
-| `src/circuit-screen/model/QuantumSimulator.ts` | Pure statevector engine: `applyControlledGate` (on/off controls), `applySwap`, `cellMatrix`, `applyColumn`, `simulate`, `computeBlochVectors` |
-| `src/circuit-screen/model/QubitSketchModel.ts` | Circuit state + `placeCell`/`removeCell`/`setCircuit`/`setCellTheta` + undo/redo history + `selectedCellProperty` + `DerivedProperty` chain (`stateVectorProperty` → `probabilitiesProperty`/`blochVectorsProperty`) |
+| `src/circuit-screen/model/QuantumSimulator.ts` | Pure statevector engine: `applyControlledGate` (on/off controls), `applySwap`, `cellMatrix`, `applyColumn`, `simulate(circuit, n, maxColumns?)` (the `maxColumns` bound powers step-through inspect), `computeBlochVectors` |
+| `src/circuit-screen/model/QubitSketchModel.ts` | Circuit state + `placeCell`/`removeCell`/`setCircuit`/`setCellTheta`/`loadCircuit` (QASM import, undoable) + undo/redo history + `selectedCellProperty` + `inspectStepProperty` (step-through cursor, transient — not in undo/URL) + `DerivedProperty` chain (`stateVectorProperty` → `probabilitiesProperty`/`blochVectorsProperty`, plus `circuitDepthProperty`) |
 | `src/circuit-screen/model/{CircuitSerializer,CircuitUrlSync}.ts` | Circuit ↔ compact string; two-way URL-hash sync (shareable links) |
-| `src/circuit-screen/view/CircuitScreenView.ts` | Top-level view, 3-column layout, drag/tooltip layers, undo/redo buttons + keyboard, inspector mount |
-| `src/circuit-screen/view/CircuitCanvas.ts` | Qubit wires, control/swap connectors, click-to-place, `slotIndexAt` (drop hit-test), rotation selection ring |
+| `src/circuit-screen/model/QasmSerializer.ts` | `circuitToQasm` / `qasmToCircuit` — OpenQASM 2.0 export & tolerant import (teaching subset; greedy column-packing on import) |
+| `src/circuit-screen/view/CircuitScreenView.ts` | Top-level view, 3-column layout, drag/tooltip layers, undo/redo buttons + keyboard, inspect-transport + QASM buttons, inspector mount |
+| `src/circuit-screen/view/CircuitCanvas.ts` | Qubit wires, control/swap connectors, click-to-place, `slotIndexAt` (drop hit-test), rotation selection ring, step-through inspect playhead |
+| `src/circuit-screen/view/{InspectControlNode,QasmDialog}.ts` | Step-through ◀/▶/Live transport; OpenQASM export(copy)/import(paste→Load) `sun.Dialog` (DOM `<textarea>`) |
 | `src/circuit-screen/view/GatePalettePanel.ts` | 2-column gate/control/swap/rotation/eraser palette; **drag-to-place** via `DragListener`; hover matrix tooltips |
 | `src/circuit-screen/view/GateNode.ts` | Colored rectangle + label for a single gate (`GATE_LABEL_MAP`); `RotationGateNode` for Rx/Ry/Rz |
 | `src/circuit-screen/view/{GateInspectorNode,MatrixTooltipNode}.ts` | Rotation-angle slider; hover 2×2-matrix tooltip |
 | `src/circuit-screen/view/SimulationPanel.ts` | Right-side `sun.Panel` hosting the four state displays |
-| `src/circuit-screen/view/{ProbabilityBarsNode,AmplitudeTableNode,MeasurementHistogramNode}.ts` | Three of the four live displays |
+| `src/circuit-screen/view/{ProbabilityBarsNode,AmplitudeTableNode,MeasurementHistogramNode}.ts` | Three of the four live displays. `ProbabilityBarsNode` is driven by `stateVectorProperty` and colors each bar by phase (`phaseToColor`) with a `PhaseLegendNode` key |
+| `src/circuit-screen/view/{PhaseLegendNode,displayUtils}.ts` | Phase→hue legend; `phaseAngleToColor`/`phaseToColor` + ket/complex/phase formatting |
 | `src/circuit-screen/view/BlochSpheresNode.ts` | Bloch display: one large **drag-to-rotate 3D** sphere for the focused qubit + a clickable per-qubit thumbnail row; owns the shared camera (azimuth/elevation) + focus state |
 | `src/circuit-screen/view/BlochSphereNode.ts` | One reusable Bloch sphere: orthographic 3D projection (shaded ball, front/back equator + axes wireframe, depth-faded state arrow); presentation-only `render(vector, azimuth, elevation)` |
-| `src/circuit-screen/view/displayUtils.ts` | Ket label + complex/phase formatting helpers |
 
 ## Supported Gates
 
@@ -80,9 +82,14 @@ brand.ts → splash.ts → assert.ts → init.ts
 - **Rotation angle**: click a placed Rx/Ry/Rz gate to open the angle slider below the circuit
 - **Tooltips**: hover a palette gate to see its 2×2 matrix + description
 - **Undo/redo**: toolbar ↶/↷ buttons or Ctrl+Z / Ctrl+Y (Ctrl+Shift+Z also redoes)
+- **Step-through (inspect)**: the ◀/▶/Live transport (next to undo/redo) scrubs `inspectStepProperty`
+  so the displays show the intermediate state after each column; a dashed playhead marks the boundary.
+  Editing the circuit leaves inspect mode
+- **OpenQASM**: the QASM button (bottom-right) opens a dialog to copy the circuit as OpenQASM 2.0 or
+  paste/Load OpenQASM back (teaching subset — see `QasmSerializer.ts`)
 - **Shareable links**: the circuit is encoded in the URL hash (`#circuit=…`)
 - **Qubit count**: use +/− buttons above the circuit (1–5 qubits)
-- **Measure**: samples one outcome from the final state into a histogram (does not collapse)
+- **Measure**: samples one outcome from the displayed state into a histogram (does not collapse)
 - **Reset All**: clears the circuit, history, and resets all controls to defaults
 
 ## Endianness
@@ -110,9 +117,12 @@ Keep simulator and displays consistent with this.
 This is a **teaching** tool. Deliberately not implemented (see `README.md` for the full list):
 WebGL/GPU sim (CPU only, **≤5 qubits**); arithmetic/modular/QFT/Grover gates; **time-animated**
 gates (parametrized Rx/Ry/Rz *are* supported, but with a static angle — no spinning `X^t`);
-density-matrix display; custom-gate forge; JSON import/export UI (circuits *are* shareable via
-the URL hash); mid-circuit collapsing measurement. (The Bloch sphere **is** a drag-to-rotate 3D
-orthographic projection now — vector graphics, not a GPU-lit/perspective scene.)
+density-matrix display; custom-gate forge; generic JSON file import/export UI; mid-circuit
+collapsing measurement. (Circuits *are* shareable via the URL hash, and **OpenQASM 2.0
+export/import is supported** via the QASM dialog — a teaching subset, see `QasmSerializer.ts`.
+The Bloch sphere **is** a drag-to-rotate 3D orthographic projection now — vector graphics, not a
+GPU-lit/perspective scene. Step-through **inspect** mode *is* supported; a **Q-sphere** view is
+deliberately *not* wanted.)
 **One target gate per column when controls are present** (multiple control dots → Toffoli/CCX is
 supported; controlled-SWAP/Fredkin is not).
 

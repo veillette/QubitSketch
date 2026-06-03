@@ -38,6 +38,14 @@ export class QubitSketchModel implements TModel {
   /** The parametrized-rotation cell currently being edited (drives the angle inspector), or null. */
   public readonly selectedCellProperty: Property<GridPosition | null> = new Property<GridPosition | null>(null);
 
+  /**
+   * Step-through "inspect" cursor: the number of circuit columns applied when showing the
+   * intermediate state (0 = initial |0…0⟩, NUM_STEPS = full circuit). `null` means inspect is
+   * off and the displays show the final state. This is transient view state — it is deliberately
+   * excluded from undo/redo and from the URL hash.
+   */
+  public readonly inspectStepProperty: Property<number | null> = new Property<number | null>(null);
+
   /** circuit[qubitIndex][stepIndex] */
   public readonly circuitProperty: Property<ReadonlyArray<ReadonlyArray<CircuitCell>>>;
 
@@ -49,6 +57,9 @@ export class QubitSketchModel implements TModel {
 
   /** Per-qubit reduced Bloch vector (length < 1 ⇒ mixed/entangled). */
   public readonly blochVectorsProperty: ReadOnlyProperty<Vector3[]>;
+
+  /** Number of occupied columns (highest non-empty step + 1; 0 if empty) — the inspect range. */
+  public readonly circuitDepthProperty: ReadOnlyProperty<number>;
 
   /** Whether there is undo/redo history available (drives toolbar button enablement). */
   public readonly canUndoProperty = new BooleanProperty(false);
@@ -65,8 +76,9 @@ export class QubitSketchModel implements TModel {
   public constructor() {
     this.circuitProperty = new Property<ReadonlyArray<ReadonlyArray<CircuitCell>>>(QubitSketchModel.emptyCircuit());
 
-    this.stateVectorProperty = new DerivedProperty([this.circuitProperty, this.qubitCountProperty], (circuit, n) =>
-      simulate(circuit, n),
+    this.stateVectorProperty = new DerivedProperty(
+      [this.circuitProperty, this.qubitCountProperty, this.inspectStepProperty],
+      (circuit, n, inspectStep) => simulate(circuit, n, inspectStep ?? NUM_STEPS),
     );
 
     this.probabilitiesProperty = new DerivedProperty([this.stateVectorProperty], (state) =>
@@ -76,6 +88,19 @@ export class QubitSketchModel implements TModel {
     this.blochVectorsProperty = new DerivedProperty([this.stateVectorProperty, this.qubitCountProperty], (state, n) =>
       computeBlochVectors(state, n),
     );
+
+    this.circuitDepthProperty = new DerivedProperty([this.circuitProperty], (circuit) => {
+      let depth = 0;
+      for (let q = 0; q < MAX_QUBITS; q++) {
+        for (let s = NUM_STEPS - 1; s >= depth; s--) {
+          if ((circuit[q]?.[s] ?? EMPTY_CELL).kind !== "empty") {
+            depth = s + 1;
+            break;
+          }
+        }
+      }
+      return depth;
+    });
 
     // Deselect the angle inspector if its qubit row is hidden by a smaller qubit count.
     this.qubitCountProperty.lazyLink((count) => {
@@ -123,6 +148,8 @@ export class QubitSketchModel implements TModel {
    *   - eraser:       clears the cell.
    */
   public placeCell(qubitIndex: number, stepIndex: number): void {
+    // Editing the circuit leaves step-through inspect mode so the displays stay authoritative.
+    this.inspectStepProperty.value = null;
     const tool = this.selectedToolProperty.value;
     const current = this.circuitProperty.value[qubitIndex]?.[stepIndex] ?? EMPTY_CELL;
 
@@ -179,6 +206,7 @@ export class QubitSketchModel implements TModel {
     if (clamped === this.qubitCountProperty.value) {
       return;
     }
+    this.inspectStepProperty.value = null;
     this.pushHistory();
     this.qubitCountProperty.value = clamped;
   }
@@ -197,6 +225,18 @@ export class QubitSketchModel implements TModel {
 
   /** Replaces the entire circuit grid in a single update (used by URL load and undo/redo). */
   public setCircuit(grid: ReadonlyArray<ReadonlyArray<CircuitCell>>): void {
+    this.circuitProperty.set(grid);
+  }
+
+  /**
+   * Replaces both the grid and qubit count as a single undoable action (used by QASM import).
+   * Leaves step-through inspect mode and clears any rotation selection.
+   */
+  public loadCircuit(grid: ReadonlyArray<ReadonlyArray<CircuitCell>>, qubitCount: number): void {
+    this.inspectStepProperty.value = null;
+    this.selectedCellProperty.value = null;
+    this.pushHistory();
+    this.qubitCountProperty.value = Math.max(MIN_QUBITS, Math.min(MAX_QUBITS, Math.round(qubitCount)));
     this.circuitProperty.set(grid);
   }
 
@@ -280,6 +320,7 @@ export class QubitSketchModel implements TModel {
     this.qubitCountProperty.reset();
     this.selectedToolProperty.reset();
     this.selectedCellProperty.reset();
+    this.inspectStepProperty.reset();
     this.circuitProperty.set(QubitSketchModel.emptyCircuit());
     this.applyingHistory = false;
     this.clearHistory();

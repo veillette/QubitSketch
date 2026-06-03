@@ -14,11 +14,14 @@ import { ResetAllButton } from "scenerystack/scenery-phet";
 import type { ScreenViewOptions } from "scenerystack/sim";
 import { ScreenView } from "scenerystack/sim";
 import { RectangularPushButton } from "scenerystack/sun";
+import { StringManager } from "../../i18n/StringManager.js";
 import QubitSketchColors from "../../QubitSketchColors.js";
 import type { QubitSketchModel } from "../model/QubitSketchModel.js";
 import { CIRCUIT_CANVAS_HEIGHT, CIRCUIT_CANVAS_WIDTH, CircuitCanvas } from "./CircuitCanvas.js";
 import { GateInspectorNode } from "./GateInspectorNode.js";
 import { GatePalettePanel } from "./GatePalettePanel.js";
+import { InspectControlNode } from "./InspectControlNode.js";
+import { createQasmDialogOpener } from "./QasmDialog.js";
 import { SimulationPanel } from "./SimulationPanel.js";
 
 const MARGIN = 20;
@@ -94,6 +97,12 @@ export class CircuitScreenView extends ScreenView {
     this.addChild(undoButton);
     this.addChild(redoButton);
 
+    // ── Step-through inspect transport (right of undo/redo) ───────────────────
+    const inspectControl = new InspectControlNode(model);
+    inspectControl.left = redoButton.right + 24;
+    inspectControl.centerY = qubitControlNode.centerY;
+    this.addChild(inspectControl);
+
     // Keyboard: Ctrl/Cmd+Z = undo, Ctrl+Y or Ctrl/Cmd+Shift+Z = redo.
     window.addEventListener("keydown", (e) => {
       const meta = e.ctrlKey || e.metaKey;
@@ -126,6 +135,20 @@ export class CircuitScreenView extends ScreenView {
       bottom: this.layoutBounds.maxY - MARGIN,
     });
     this.addChild(resetAllButton);
+
+    // ── OpenQASM export/import (bottom-right, left of Reset All) ───────────────
+    const openQasmDialog = createQasmDialogOpener(model);
+    const qasmButton = new RectangularPushButton({
+      content: new Text(StringManager.getInstance().getQasmStrings().buttonStringProperty, {
+        font: "bold 14px sans-serif",
+        fill: QubitSketchColors.textColorProperty,
+      }),
+      listener: openQasmDialog,
+      baseColor: QubitSketchColors.panelBackgroundColorProperty,
+    });
+    qasmButton.right = resetAllButton.left - 16;
+    qasmButton.centerY = resetAllButton.centerY;
+    this.addChild(qasmButton);
 
     // Drag previews and tooltips float above all other content.
     this.addChild(dragLayer);
