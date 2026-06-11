@@ -19,6 +19,7 @@ import { onReadyToLaunch, PreferencesModel, Sim } from "scenerystack/sim";
 import { Tandem } from "scenerystack/tandem";
 import { CircuitScreen } from "./circuit-screen/CircuitScreen.js";
 import { StringManager } from "./i18n/StringManager.js";
+import QubitSketchColors from "./QubitSketchColors.js";
 
 onReadyToLaunch(() => {
   const stringManager = StringManager.getInstance();
@@ -28,6 +29,7 @@ onReadyToLaunch(() => {
       // The screen name Property updates automatically when the locale changes
       name: stringManager.getScreenNames().circuitStringProperty,
       tandem: Tandem.ROOT.createTandem("circuitScreen"),
+      backgroundColorProperty: QubitSketchColors.backgroundColorProperty,
     }),
   ];
 
