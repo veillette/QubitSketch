@@ -1,0 +1,73 @@
+{
+  "title": "QubitSketch",
+  "screens": {
+    "circuit": "Circuito"
+  },
+  "displays": {
+    "probabilities": "Probabilidades",
+    "amplitudes": "Amplitudes",
+    "bloch": "Esferas de Bloch",
+    "measurement": "Medición"
+  },
+  "table": {
+    "state": "Estado",
+    "amplitude": "Amplitud",
+    "magnitude": "Magnitud",
+    "phase": "Fase"
+  },
+  "buttons": {
+    "measure": "Medir",
+    "clearShots": "Borrar"
+  },
+  "tools": {
+    "control": "Control"
+  },
+  "inspector": {
+    "angle": "Ángulo"
+  },
+  "inspect": {
+    "live": "En vivo"
+  },
+  "qasm": {
+    "button": "QASM",
+    "title": "OpenQASM 2.0",
+    "exportLabel": "Exportar (copiar en Qiskit)",
+    "importLabel": "Importar (pegar, luego Cargar)",
+    "copy": "Copiar",
+    "copied": "¡Copiado!",
+    "load": "Cargar",
+    "error": "No se pudo analizar OpenQASM"
+  },
+  "examples": {
+    "label": "Circuitos de ejemplo",
+    "choose": "Elige un circuito…",
+    "bell": "Estado de Bell (2q)",
+    "ghz": "Estado GHZ (3q)",
+    "chsh": "Desigualdad de Bell / CHSH (2q)",
+    "teleport": "Teletransportación (3q)",
+    "superdense": "Codificación superdensa (2q)",
+    "eraser": "Borrador de elección retardada (2q)",
+    "symmetry": "Ruptura de simetría (2q)",
+    "grover": "Búsqueda de Grover (2q)",
+    "qft": "Transformada cuántica de Fourier (3q)",
+    "adder": "Semisumador reversible (3q)"
+  },
+  "descriptions": {
+    "H": "Hadamard — crea una superposición equitativa",
+    "X": "Pauli-X — inversión de bit (NOT cuántico)",
+    "Y": "Pauli-Y — inversión combinada de bit y fase",
+    "Z": "Pauli-Z — inversión de fase de |1⟩",
+    "S": "Fase (S) — añade una fase de +90° a |1⟩",
+    "T": "T — añade una fase de +45° a |1⟩",
+    "Sdg": "S† — añade una fase de −90° a |1⟩",
+    "Tdg": "T† — añade una fase de −45° a |1⟩",
+    "Vx": "√X — raíz cuadrada de NOT",
+    "Rx": "Rx(θ) — rotación alrededor del eje X",
+    "Ry": "Ry(θ) — rotación alrededor del eje Y",
+    "Rz": "Rz(θ) — rotación alrededor del eje Z",
+    "control": "Control — condiciona la puerta de la columna a |1⟩",
+    "antiControl": "Anticontrol — condiciona la puerta de la columna a |0⟩",
+    "swap": "Swap — intercambia dos cúbits (coloca dos)",
+    "eraser": "Borrador — vacía una celda"
+  }
+}
