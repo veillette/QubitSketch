@@ -10,6 +10,7 @@ import QubitSketchColors from "../QubitSketchColors.js";
 import { attachUrlSync } from "./model/CircuitUrlSync.js";
 import { QubitSketchModel } from "./model/QubitSketchModel.js";
 import { CircuitScreenView } from "./view/CircuitScreenView.js";
+import { QubitSketchKeyboardHelpContent } from "./view/QubitSketchKeyboardHelpContent.js";
 
 type CircuitScreenOptions = ScreenOptions & { tandem: Tandem };
 
@@ -27,6 +28,7 @@ export class CircuitScreen extends Screen<QubitSketchModel, CircuitScreenView> {
         }),
       {
         backgroundColorProperty: QubitSketchColors.backgroundColorProperty,
+        createKeyboardHelpNode: () => new QubitSketchKeyboardHelpContent(),
         ...options,
       },
     );
